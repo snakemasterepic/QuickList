@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/QuickList/QuickList
+    working_directory: ~/QuickList
     
     docker:
       - image: circleci/openjdk:8-jdk-browsers
