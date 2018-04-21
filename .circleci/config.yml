@@ -8,6 +8,4 @@ jobs:
     steps:
       - checkout
 
-      - run: mvn dependency:go-offline # gets the project dependencies
-      
-      
+      - run mvm package
