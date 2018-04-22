@@ -11,3 +11,6 @@ Ensure that all of the tests work when you upload changes.  Do not make changes 
 - Performance: The code runs relatively quickly
 - Maintainability: The code is easy to maintain, and changes can be quickly and easily made
 - Readability: The code is easy to read and understand.
+
+# CI
+This project uses continuous integration managed by [Semaphore](https://semaphoreci.com/snakemasterepic/quicklist-2).  This involves building and testing after each push.
