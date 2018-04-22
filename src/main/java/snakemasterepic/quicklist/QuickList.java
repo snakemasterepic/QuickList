@@ -78,7 +78,8 @@ public class QuickList<E> extends AbstractList<E>
 
     /**
      * The Wrinke class stores data about discrepancies between the backbone
-     * indexes and the true indexes of the elements of the list.
+     * indexes and the true indexes of the elements of the list. It uses a
+     * double-linked structure to allow for quick use by iterators.
      */
     private static class Wrinkle
     {
@@ -98,6 +99,10 @@ public class QuickList<E> extends AbstractList<E>
          * A reference to the next wrinkle
          */
         public Wrinkle next;
+        /**
+         * A reference to the previous wrinkle
+         */
+        public Wrinkle prev;
 
         /**
          * Creates a Wrinkle for a given discrepancy
@@ -108,8 +113,9 @@ public class QuickList<E> extends AbstractList<E>
          * indexes relative to the backbone indexes.
          * @param next a reference to the next Wrinkle
          */
-        public Wrinkle(int index, int offset, Wrinkle next)
+        public Wrinkle(Wrinkle prev, int index, int offset, Wrinkle next)
         {
+            this.prev = prev;
             this.index = index;
             this.offset = offset;
             this.next = next;
@@ -276,7 +282,7 @@ public class QuickList<E> extends AbstractList<E>
         }
         if (firstWrinkle == null) {
             // Create the first wrinkle
-            firstWrinkle = new Wrinkle(index, offset, null);
+            firstWrinkle = new Wrinkle(null, index, offset, null);
         } else {
             // It is known at this point that firstWrinkle is not null
             // Grab the first wrinkle and stop when the next wrinkle is at or above the targeted index
@@ -295,21 +301,23 @@ public class QuickList<E> extends AbstractList<E>
                     }
                 } else {
                     // Simply create a new first wrinkle
-                    firstWrinkle = new Wrinkle(index, offset, w);
+                    firstWrinkle = new Wrinkle(null, index, offset, w);
                 }
             } else if (w.next == null) {
                 // Special case: last wrinkle
-                w.next = new Wrinkle(index, offset, null);
+                w.next = new Wrinkle(w, index, offset, null);
             } else if (w.next.index == index) {
                 // Increase the offset of the next wrinkle since its index is the same as the passed index
                 w.next.offset += offset;
                 if (w.next.offset == 0) {
                     // If the offset of the next wrinkle is zero, remove it
                     w.next = w.next.next;
+                    w.next.prev=w;
                 }
             } else {
                 // Create a new wrinkle
-                w.next = new Wrinkle(index, offset, w.next);
+                w.next = new Wrinkle(w, index, offset, w.next);
+                w.next.next.prev=w.next;
             }
         }
     }
@@ -605,7 +613,15 @@ public class QuickList<E> extends AbstractList<E>
          * The backbone index of the last returned node
          */
         private int lastBackboneIndex;
-
+        /**
+         * The next wrinkle
+         */
+        private Wrinkle nextWrinkle;
+        /**
+         * The previous wrinkle
+         */
+        private Wrinkle prevWrinkle;
+        
         /**
          * The modification count at the time this ListIterator was created
          */
