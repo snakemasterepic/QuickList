@@ -505,6 +505,15 @@ public class QuickListTest
     }
 
     @Test
+    public void testIteratorAdd3()
+    {
+        QuickList<Integer> q=new QuickList<>();
+        ListIterator<Integer> it=q.listIterator();
+        it.add(2);
+        assertEquals(new Integer(2),q.get(0));
+    }
+    
+    @Test
     public void testToString()
     {
         assertEquals("[B0, B1, B2, B3, B4, B5, B6, B7, B8, B9]", q1.toString());
@@ -514,5 +523,7 @@ public class QuickListTest
         assertEquals("[I0, B1, I1, I2, I3, B4, I4, B6, T0, T1]", q5.toString());
         assertEquals("[T0, T1, T2, T3]", q6.toString());
     }
+    
+    
 
 }
