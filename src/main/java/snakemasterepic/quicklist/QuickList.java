@@ -277,7 +277,7 @@ public class QuickList<E> extends AbstractList<E>
      */
     private void addWrinkle(int index, int offset)
     {
-        if (index == backbone.length) {
+        if (index >= backbone.length) {
             return; // Don't add wrinkles for the tail
         }
         if (firstWrinkle == null) {
@@ -302,6 +302,7 @@ public class QuickList<E> extends AbstractList<E>
                 } else {
                     // Simply create a new first wrinkle
                     firstWrinkle = new Wrinkle(null, index, offset, w);
+                    w.prev = firstWrinkle;
                 }
             } else if (w.next == null) {
                 // Special case: last wrinkle
@@ -312,12 +313,14 @@ public class QuickList<E> extends AbstractList<E>
                 if (w.next.offset == 0) {
                     // If the offset of the next wrinkle is zero, remove it
                     w.next = w.next.next;
-                    w.next.prev=w;
+                    if (w.next != null) {
+                        w.next.prev = w;
+                    }
                 }
             } else {
                 // Create a new wrinkle
                 w.next = new Wrinkle(w, index, offset, w.next);
-                w.next.next.prev=w.next;
+                w.next.next.prev = w.next;
             }
         }
     }
@@ -613,15 +616,7 @@ public class QuickList<E> extends AbstractList<E>
          * The backbone index of the last returned node
          */
         private int lastBackboneIndex;
-        /**
-         * The next wrinkle
-         */
-        private Wrinkle nextWrinkle;
-        /**
-         * The previous wrinkle
-         */
-        private Wrinkle prevWrinkle;
-        
+
         /**
          * The modification count at the time this ListIterator was created
          */
@@ -642,6 +637,7 @@ public class QuickList<E> extends AbstractList<E>
             next = grab(backboneIndex, index);
             this.initModCount = initModCount;
             last = null;
+
         }
 
         /**
@@ -712,32 +708,21 @@ public class QuickList<E> extends AbstractList<E>
         }
 
         /**
-         * Updates the back bone index moving backward through the list
-         */
-        private void updateBackboneIndexBackward()
-        {
-            int probe = backboneIndex - 1;
-            Node<E> temp = null;
-            while (probe >= 0 && (temp == null || temp.item == null || backbone[probe] == temp)) {
-                temp = backbone[probe];
-                probe--;
-            }
-            probe++;
-            if (temp == last) {
-                backboneIndex = probe;
-                lastBackboneIndex = backboneIndex;
-            }
-        }
-
-        /**
          * Updates the backbone index moving forward through the list
          */
         private void updateBackboneIndexForward()
         {
-            if (backboneIndex < backbone.length && backbone[backboneIndex] == last) {
-                lastBackboneIndex = backboneIndex;
-                backboneIndex = backboneIndex(listIndex);
-            }
+            lastBackboneIndex = backboneIndex;
+            backboneIndex=backboneIndex(listIndex);
+        }
+
+        /**
+         * Updates the back bone index moving backward through the list
+         */
+        private void updateBackboneIndexBackward()
+        {
+            backboneIndex=backboneIndex(listIndex);
+            lastBackboneIndex=backboneIndex;
         }
 
         @Override
@@ -759,6 +744,7 @@ public class QuickList<E> extends AbstractList<E>
             if (last == null) {
                 throw new IllegalStateException();
             }
+            // Update references
             if (last.prev == null) {
                 head = head.next;
             } else {
@@ -769,16 +755,17 @@ public class QuickList<E> extends AbstractList<E>
             } else {
                 last.next.prev = last.prev;
             }
-
+            last.item = null;
+            // Handle wrinkle collapsing
             if (lastBackboneIndex < backbone.length && backbone[lastBackboneIndex] == last) {
                 backbone[lastBackboneIndex] = last.prev;
             }
-            last.item = null;
+            // Update the wrinkles
             addWrinkle(lastBackboneIndex, -1);// Create a wrinkle
+           
             if (last != next) { // Last call moved the iterator forward, so go back
                 listIndex--;
-                updateBackboneIndexBackward();
-
+                //updateBackboneIndexBackward();
             } else {
                 next = next.next;
             }
@@ -802,7 +789,12 @@ public class QuickList<E> extends AbstractList<E>
         public void add(E e)
         {
             checkForModifications();
-            if (next == null) {
+            if (foot == null) {
+                // Special case: insert the first node
+                head = new Node<>(null, null, e);
+                foot = head;
+                listIndex++;
+            } else if (next == null) {
                 // Add to the end of the list
                 foot.next = new Node<>(foot, null, e);
                 foot = foot.next;
@@ -814,12 +806,11 @@ public class QuickList<E> extends AbstractList<E>
                 listIndex++;
                 addWrinkle(0, 1);
             } else {
-                // Insert the element anywhere in the list
+                // Insert the element anywhere else in the list
                 Node<E> newNode = new Node<>(next.prev, next, e);
                 next.prev.next = newNode;
                 next.prev = newNode;
                 listIndex++;
-
                 addWrinkle(backboneIndex, 1);
             }
             size++;
