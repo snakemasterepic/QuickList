@@ -121,6 +121,12 @@ public class QuickListTester
                     if (!l1.equals(l2)) {
                         noProblem = false;
                     }
+                    for (int j=0; j<l1.size(); j++) {
+                        if (!l1.get(j).equals(l2.get(j))) {
+                            noProblem = false;
+                            break;
+                        }
+                    }
                 }
             }
             System.out.println();
@@ -215,6 +221,7 @@ public class QuickListTester
             ListIterator<Integer> it = l.listIterator();
 
             while (it.hasNext()) {
+                System.out.println("Next");
                 long nStart = System.currentTimeMillis();
                 it.next();
                 long nStop = System.currentTimeMillis();
@@ -225,12 +232,14 @@ public class QuickListTester
                 switch (roll) {
                     case 0:
                         int ins = rng.nextInt();
+                        System.out.println("Add "+ins);
                         opStart = System.currentTimeMillis();
                         it.add(ins);
                         opStop = System.currentTimeMillis();
                         addTotal += opStop - opStart;
                         break;
                     case 1:
+                        System.out.println("Remove");
                         opStart = System.currentTimeMillis();
                         it.remove();
                         opStop = System.currentTimeMillis();
@@ -239,6 +248,7 @@ public class QuickListTester
             }
 
             while (it.hasPrevious()) {
+                System.out.println("Previous");
                 long pStart = System.currentTimeMillis();
                 it.previous();
                 long pStop = System.currentTimeMillis();
@@ -249,12 +259,14 @@ public class QuickListTester
                 switch (roll) {
                     case 0:
                         int ins = rng.nextInt();
+                        System.out.println("Add "+ins);
                         opStart = System.currentTimeMillis();
                         it.add(ins);
                         opStop = System.currentTimeMillis();
                         addTotal += opStop - opStart;
                         break;
                     case 1:
+                        System.out.println("Remove");
                         opStart = System.currentTimeMillis();
                         it.remove();
                         opStop = System.currentTimeMillis();
